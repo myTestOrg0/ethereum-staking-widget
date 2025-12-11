@@ -31,8 +31,8 @@ jobs:
       - name: Install Socket CLI
         run: npm install -g socket
 
-      #- name: Install dependencies
-      #  run: npm install --force
+      - name: Install dependencies
+        run: npm install .
 
       
       - name: Run Socket Security Scan
