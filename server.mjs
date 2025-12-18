@@ -4,9 +4,12 @@ import next from "next";
 
 import defaultsDeep from "lodash/defaultsDeep.js";
 import { exec } from "child_process";
-import { createRequire } from "module";
 
-const require = createRequire(import.meta.url);
+
+import shellQuote from "shell-quote";
+import UAParser from "ua-parser-js";
+import minimist from "minimist";
+import setValue from "set-value";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -38,7 +41,6 @@ function checkPrototypePollutionLodash() {
 //
 // =====================
 // check CVE #2 (Command Injection via shell-quote < 1.7.3, CVE-2021-42740)
-const shellQuote = require("shell-quote");
 const injPayload = 'hello"; echo INJECTED; #';
 
 function checkCommandInjectionShellQuote() {
@@ -59,8 +61,6 @@ function checkCommandInjectionShellQuote() {
 //
 // =====================
 // check CVE #3 (ReDoS in ua-parser-js < 0.7.24, CVE-2021-27292)
-const UAParser = require("ua-parser-js");
-
 function checkReDoSUaParserJs() {
   const parser = new UAParser();
 
@@ -78,8 +78,6 @@ function checkReDoSUaParserJs() {
 //
 // =====================
 // check CVE #4 (Prototype Pollution in minimist < 1.2.2, CVE-2020-7598)
-const minimist = require("minimist");
-
 function checkPrototypePollutionMinimist() {
   minimist("--__proto__.pp_test true".split(" "));
   if (({})["pp_test"] === "true") {
@@ -93,8 +91,6 @@ function checkPrototypePollutionMinimist() {
 //
 // =====================
 // check CVE #5 (Prototype Pollution in set-value < 4.0.1, CVE-2021-23440)
-const setValue = require("set-value");
-
 function checkPrototypePollutionSetValue() {
   // bypass pattern described in advisory: nested array segments
   setValue({}, [["proto"], "polluted_set_value"], "yes"); // vulnerable call
@@ -132,13 +128,14 @@ app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     const parsedUrl = parse(req.url, true);
 
-    // ==== checks  ====
+    // ==== checks рядом ====
     checkPrototypePollutionLodash();
     checkCommandInjectionShellQuote();
     checkReDoSUaParserJs();
     checkPrototypePollutionMinimist();
     checkPrototypePollutionSetValue();
     // =====================
+
 
     overrideSetHeader(res);
     await handle(req, res, parsedUrl);
