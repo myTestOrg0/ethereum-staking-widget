@@ -57,4 +57,7 @@ jobs:
             --reach-version 14.12.183 \
             --target-path $GITHUB_WORKSPACE \
             --scm github \
-            --pr-number $PR_NUMBER
+            --pr-number $PR_NUMBER \
+            --ignore-commit-files
+            
+            
